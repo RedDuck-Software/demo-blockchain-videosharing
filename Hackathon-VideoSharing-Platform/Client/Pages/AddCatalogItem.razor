@@ -9,6 +9,11 @@
 
 <div class="container">
     <div class="row">
+        @if (ErrorMessage != null)
+        {
+            <p>@ErrorMessage</p>
+        }
+
         @if (IsSending)
         {
             <p>Loading...</p> }
@@ -36,7 +41,7 @@
                         <InputFile OnChange="@OnFileSend" />
                     </div>
 
-                    <button type="submit" @onclick="SendMessage" class="btn btn-primary">Add Film</button>
+                    <button type="submit" class="btn btn-primary">Add Film</button>
                 </EditForm>
             </div>
         }
@@ -48,16 +53,25 @@
 @code {
     private VideoMetaData videoMetaData = new VideoMetaData();
     private HubConnection hubConnection;
-    private List<string> messages = new List<string>();
 
     private bool IsSending = false;
 
+    private string ErrorMessage;
+
     private async Task HandleAdding()
     {
-        IsSending = true;
-        //await client.PostJsonAsync("api/FeatureManagement/AddFeature", addFeatureModel);
-        IsSending = false;
-        //NavigationManager.NavigateTo("/FeatureManagement");
+
+        if (String.IsNullOrEmpty(videoMetaData.IPFSHash))
+        {
+            ErrorMessage = "Please upload video";
+        }
+        else
+        {
+            IsSending = true;
+            await SendMessage();
+            IsSending = false;
+        }
+
     }
 
     private async Task OnFileSend(InputFileChangeEventArgs e)
@@ -70,13 +84,13 @@
             await readStream.ReadAsync(buffer);
         }
 
-        Console.WriteLine("Read it!");
-
         var client = new IPFSConnection.IPFSConnection();
 
         var hash = await client.UploadDataAsync(buffer);
+        videoMetaData.IPFSHash = hash;
+        ErrorMessage = null;
 
-        Console.WriteLine(hash);
+        Console.WriteLine("Got hash: {0}", hash);
     }
 
     protected override async Task OnInitializedAsync()
@@ -84,8 +98,6 @@
         hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
             .Build();
-
-
 
         await hubConnection.StartAsync();
     }
