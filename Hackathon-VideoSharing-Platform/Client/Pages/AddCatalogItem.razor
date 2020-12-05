@@ -1,0 +1,72 @@
+﻿@page "/AddCatalogItem"
+@using Hackathon_VideoSharing_Platform.Shared
+@using Microsoft.AspNetCore.SignalR.Client
+@using BlazorInputFile
+
+<h3>Add CatalogItem</h3>
+
+
+<div class="container">
+    <div class="row">
+        @if (IsSending)
+        {
+            <p>Loading...</p> }
+        else
+        {
+            <div class="col-md-5">
+                <h4 class="mb-3">Title</h4>
+                <EditForm Model="@addCatalogItemModel" OnValidSubmit="@HandleAdding">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <InputText id="title" class="form-control" placeholder="Большая Заруба 2" @bind-Value="addCatalogItemModel.Title" />
+                        <ValidationMessage For="@(() => addCatalogItemModel.Title)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="title">Price</label>
+                        <InputNumber id="cost" class="form-control" @bind-Value="addCatalogItemModel.Price" />
+                        <ValidationMessage For="@(() => addCatalogItemModel.Price)" />
+                    </div>
+                    <div class="form-group">
+                        <label for="photo">Upload photo</label>
+                        <InputFile OnChange="@FileSendNotification" />
+                    </div>
+
+
+                    <button type="submit" class="btn btn-primary">Add Film</button>
+                </EditForm>
+            </div>}
+    </div>
+</div>
+
+
+
+@code {
+    private AddCatalogItemModel addCatalogItemModel = new AddCatalogItemModel();
+    //private const string HtmlImageIdentifier = "image/";
+    //private static bool ValidateFile(IFileListEntry file) => file.Type.StartsWith(HtmlImageIdentifier);
+    private HubConnection hubConnection;
+
+    private bool IsSending = false;
+
+    private async Task HandleAdding()
+    {
+        IsSending = true;
+        //await client.PostJsonAsync("api/FeatureManagement/AddFeature", addFeatureModel);
+        IsSending = false;
+        //NavigationManager.NavigateTo("/FeatureManagement");
+    }
+
+    private async Task FileSendNotification(IFileListEntry[] files)
+    {
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+}
