@@ -6,7 +6,7 @@ namespace Hackathon_VideoSharing_Platform.Server.Hubs
 {
     public class NotifucationHub : Hub
     {
-        async Task BroadcastNewVideoInfo(VideoMetaData videoMetaData)
+        public async Task BroadcastNewVideoInfo(VideoMetaData videoMetaData)
         {
             await Clients.All.SendAsync("OnBroadcastNewVideoInfo", videoMetaData);
         }
