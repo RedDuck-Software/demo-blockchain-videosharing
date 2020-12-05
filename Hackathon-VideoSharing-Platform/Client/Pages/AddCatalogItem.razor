@@ -1,7 +1,6 @@
 ﻿@page "/AddCatalogItem"
 @using Hackathon_VideoSharing_Platform.Shared
 @using Microsoft.AspNetCore.SignalR.Client
-@using BlazorInputFile
 
 <h3>Add CatalogItem</h3>
 
@@ -31,8 +30,8 @@
                         <ValidationMessage For="@(() => addCatalogItemModel.Price)" />
                     </div>
                     <div class="form-group">
-                        <label for="photo">Upload photo</label>
-                        <InputFile OnChange="@FileSendNotification" />
+                        <label for="photo">Upload video</label>
+                        <InputFile OnChange="@OnFileSend" />
                     </div>
 
 
@@ -46,8 +45,6 @@
 
 @code {
     private AddCatalogItemModel addCatalogItemModel = new AddCatalogItemModel();
-    //private const string HtmlImageIdentifier = "image/";
-    //private static bool ValidateFile(IFileListEntry file) => file.Type.StartsWith(HtmlImageIdentifier);
     private HubConnection hubConnection;
 
     private bool IsSending = false;
@@ -60,9 +57,23 @@
         //NavigationManager.NavigateTo("/FeatureManagement");
     }
 
-    private async Task FileSendNotification(IFileListEntry[] files)
+    private async Task OnFileSend(InputFileChangeEventArgs e)
     {
+        var a = e.File;
 
+        var buffer = new byte[e.File.Size];
+        using (var readStream = e.File.OpenReadStream())
+        {
+            await readStream.ReadAsync(buffer);
+        }
+
+        Console.WriteLine("Read it!");
+
+        var client = new IPFSConnection.IPFSConnection();
+
+        var hash = await client.UploadDataAsync(buffer);
+
+        Console.WriteLine(hash);
     }
 
     protected override async Task OnInitializedAsync()

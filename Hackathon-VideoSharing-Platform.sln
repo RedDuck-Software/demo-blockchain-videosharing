@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hackathon-VideoSharing-Plat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hackathon-VideoSharing-Platform.Shared", "Hackathon-VideoSharing-Platform\Shared\Hackathon-VideoSharing-Platform.Shared.csproj", "{316B3793-0AE1-441A-BD2F-944632588355}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IPFSConnection", "IPFSConnection\IPFSConnection.csproj", "{FCD64916-F640-4371-8496-D2EFC80995CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnitTestProject1", "NUnitTestProject1\NUnitTestProject1.csproj", "{8B33E37F-CA07-4588-AEA9-A3AB299FAA9B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{316B3793-0AE1-441A-BD2F-944632588355}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{316B3793-0AE1-441A-BD2F-944632588355}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{316B3793-0AE1-441A-BD2F-944632588355}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCD64916-F640-4371-8496-D2EFC80995CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCD64916-F640-4371-8496-D2EFC80995CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCD64916-F640-4371-8496-D2EFC80995CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCD64916-F640-4371-8496-D2EFC80995CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B33E37F-CA07-4588-AEA9-A3AB299FAA9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B33E37F-CA07-4588-AEA9-A3AB299FAA9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B33E37F-CA07-4588-AEA9-A3AB299FAA9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B33E37F-CA07-4588-AEA9-A3AB299FAA9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
