@@ -4,6 +4,9 @@
 @using Hackathon.VideoSharing.Platform.Client
 @inject SymmetricKeyIPFSDictionary dict
 @inject NavigationManager NavigationManager
+@inject IJSRuntime jsRuntime;
+@inject MetamaskService metamaskService;
+@inject MetamaskInterceptor metamaskInterceptor;
 @implements IAsyncDisposable
 
 <h3>Add CatalogItem</h3>
@@ -38,7 +41,14 @@
                         <InputFile OnChange="@OnFileSend" />
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Add Film</button>
+                    @if (MetamaskAvailable && EthereumEnabled)
+                    {
+                        <button type="submit" class="btn btn-primary">Add Film</button>
+                    }
+                    else
+                    {
+                        <button @onclick="EnableEthereumAsync">Connect metamask wallet</button>
+                    }
                 </EditForm>
             </div>
         }
@@ -52,6 +62,12 @@
     private byte[] videoFile;
     private HubConnection hubConnection;
 
+    //Metamask
+    bool MetamaskAvailable { get; set; }
+    bool EthereumEnabled { get; set; }
+    string SelectedAccount { get; set; }
+
+
     private bool IsSending = false;
 
     private async Task HandleAdding()
@@ -59,6 +75,16 @@
         IsSending = true;
         await SendMessage();
         IsSending = false;
+    }
+
+    protected async Task EnableEthereumAsync()
+    {
+        EthereumEnabled = await metamaskService.EnableEthereumAsync();
+        if (EthereumEnabled)
+        {
+            SelectedAccount = await metamaskService.GetSelectedAccount();
+        }
+
     }
 
     private async Task OnFileSend(InputFileChangeEventArgs e)
@@ -81,6 +107,21 @@
             .Build();
 
         await hubConnection.StartAsync();
+
+        //Metamask
+        MetamaskAvailable = await metamaskService.CheckMetamaskAvailability();
+
+        if (MetamaskAvailable)
+        {
+            metamaskService.SelectedAccountChanged += async a =>
+            {
+                Console.WriteLine("accountchanged");
+                SelectedAccount = a;
+                this.StateHasChanged();
+            };
+        }
+
+        await EnableEthereumAsync();
     }
 
     async Task SendMessage()
@@ -94,7 +135,7 @@
 
         Console.WriteLine("Got hash: {0}", hash);
 
-        var videoMetadata = new VideoMetaData { AddressAuthor = "", Price = videoMetaData.Price, Title = videoMetaData.Title };
+        var videoMetadata = new VideoMetaData { AddressAuthor = SelectedAccount, Price = videoMetaData.Price, Title = videoMetaData.Title };
 
         dict.Add(videoMetadata, key);
 
