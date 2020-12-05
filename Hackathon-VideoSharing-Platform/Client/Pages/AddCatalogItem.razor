@@ -1,6 +1,8 @@
 ﻿@page "/AddCatalogItem"
 @using Hackathon_VideoSharing_Platform.Shared
 @using Microsoft.AspNetCore.SignalR.Client
+@using Hackathon.VideoSharing.Platform.Client
+@inject SymmetricKeyIPFSDictionary dict
 @inject NavigationManager NavigationManager
 @implements IAsyncDisposable
 
@@ -9,11 +11,6 @@
 
 <div class="container">
     <div class="row">
-        @if (ErrorMessage != null)
-        {
-            <p>@ErrorMessage</p>
-        }
-
         @if (IsSending)
         {
             <p>Loading...</p> }
@@ -52,26 +49,16 @@
 
 @code {
     private VideoMetaData videoMetaData = new VideoMetaData();
+    private byte[] videoFile;
     private HubConnection hubConnection;
 
     private bool IsSending = false;
 
-    private string ErrorMessage;
-
     private async Task HandleAdding()
     {
-
-        if (String.IsNullOrEmpty(videoMetaData.IPFSHash))
-        {
-            ErrorMessage = "Please upload video";
-        }
-        else
-        {
-            IsSending = true;
-            await SendMessage();
-            IsSending = false;
-        }
-
+        IsSending = true;
+        await SendMessage();
+        IsSending = false;
     }
 
     private async Task OnFileSend(InputFileChangeEventArgs e)
@@ -84,13 +71,7 @@
             await readStream.ReadAsync(buffer);
         }
 
-        var client = new IPFSConnection.IPFSConnection();
-
-        var hash = await client.UploadDataAsync(buffer);
-        videoMetaData.IPFSHash = hash;
-        ErrorMessage = null;
-
-        Console.WriteLine("Got hash: {0}", hash);
+        videoFile = buffer;
     }
 
     protected override async Task OnInitializedAsync()
@@ -102,8 +83,23 @@
         await hubConnection.StartAsync();
     }
 
-    Task SendMessage() =>
-        hubConnection.SendAsync("BroadcastNewVideoInfo", new VideoMetaData { AddressAuthor = "", Price = videoMetaData.Price, Title = videoMetaData.Title });
+    async Task SendMessage()
+    {
+        var client = new IPFSConnection.IPFSConnection();
+
+        var key = "HUI"; // stub
+
+        var hash = await client.UploadDataAsync(videoFile);
+        videoMetaData.IPFSHash = hash;
+
+        Console.WriteLine("Got hash: {0}", hash);
+
+        var videoMetadata = new VideoMetaData { AddressAuthor = "", Price = videoMetaData.Price, Title = videoMetaData.Title };
+
+        dict.Add(videoMetadata, key);
+
+        await hubConnection.SendAsync("BroadcastNewVideoInfo", videoMetadata);
+    }
 
     public async ValueTask DisposeAsync()
     {
