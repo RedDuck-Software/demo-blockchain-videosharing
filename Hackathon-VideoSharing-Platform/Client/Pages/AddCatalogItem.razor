@@ -2,6 +2,7 @@
 @using Hackathon_VideoSharing_Platform.Shared
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager NavigationManager
+@implements IAsyncDisposable
 @using BlazorInputFile
 
 <h3>Add CatalogItem</h3>
@@ -83,7 +84,7 @@
     }
 
     Task SendMessage() =>
-        hubConnection.SendAsync("BroadcastNewVideoInfo", new VideoMetaData {  AddressAuthor = "", Price = videoMetaData.Price, Title = videoMetaData.Title});
+        hubConnection.SendAsync("BroadcastNewVideoInfo", new VideoMetaData { AddressAuthor = "", Price = videoMetaData.Price, Title = videoMetaData.Title });
 
     public async ValueTask DisposeAsync()
     {
