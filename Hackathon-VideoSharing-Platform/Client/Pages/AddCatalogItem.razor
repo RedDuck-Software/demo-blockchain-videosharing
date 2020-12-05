@@ -1,6 +1,7 @@
 ﻿@page "/AddCatalogItem"
 @using Hackathon_VideoSharing_Platform.Shared
 @using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
 @using BlazorInputFile
 
 <h3>Add CatalogItem</h3>
@@ -15,28 +16,27 @@
         {
             <div class="col-md-5">
                 <h4 class="mb-3">Title</h4>
-                <EditForm Model="@addCatalogItemModel" OnValidSubmit="@HandleAdding">
+                <EditForm Model="@videoMetaData" OnValidSubmit="@HandleAdding">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
 
                     <div class="form-group">
                         <label for="title">Title</label>
-                        <InputText id="title" class="form-control" placeholder="Большая Заруба 2" @bind-Value="addCatalogItemModel.Title" />
-                        <ValidationMessage For="@(() => addCatalogItemModel.Title)" />
+                        <InputText id="title" class="form-control" placeholder="Большая Заруба 2" @bind-Value="videoMetaData.Title" />
+                        <ValidationMessage For="@(() => videoMetaData.Title)" />
                     </div>
 
                     <div class="form-group">
                         <label for="title">Price</label>
-                        <InputNumber id="cost" class="form-control" @bind-Value="addCatalogItemModel.Price" />
-                        <ValidationMessage For="@(() => addCatalogItemModel.Price)" />
+                        <InputNumber id="cost" class="form-control" @bind-Value="videoMetaData.Price" />
+                        <ValidationMessage For="@(() => videoMetaData.Price)" />
                     </div>
                     <div class="form-group">
                         <label for="photo">Upload photo</label>
                         @*<InputFile OnChange="@FileSendNotification" />*@
                     </div>
 
-
-                    <button type="submit" class="btn btn-primary">Add Film</button>
+                    <button type="submit" @onclick="SendMessage" class="btn btn-primary">Add Film</button>
                 </EditForm>
             </div>}
     </div>
@@ -45,10 +45,11 @@
 
 
 @code {
-    private AddCatalogItemModel addCatalogItemModel = new AddCatalogItemModel();
+    private VideoMetaData videoMetaData = new VideoMetaData();
     //private const string HtmlImageIdentifier = "image/";
     //private static bool ValidateFile(IFileListEntry file) => file.Type.StartsWith(HtmlImageIdentifier);
     private HubConnection hubConnection;
+    private List<string> messages = new List<string>();
 
     private bool IsSending = false;
 
@@ -67,6 +68,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
+            .Build();
+
+        //hubConnection.On<VideoMetaData>("OnBroadcastNewVideoInfo", (vmd) =>
+        //{
+        //    var encodedMsg = $"{vmd.AddressAuthor}: {vmd.Title} - {vmd.Price}";
+        //    messages.Add(encodedMsg);
+        //    StateHasChanged();
+        //});
+
+        await hubConnection.StartAsync();
+    }
+
+    Task SendMessage() =>
+        hubConnection.SendAsync("BroadcastNewVideoInfo", new VideoMetaData {  AddressAuthor = "", Price = videoMetaData.Price, Title = videoMetaData.Title});
+
+    public async ValueTask DisposeAsync()
+    {
+        await hubConnection.DisposeAsync();
     }
 }
