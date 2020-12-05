@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hackathon-VideoSharing-Platform.Server", "Hackathon-VideoSharing-Platform\Server\Hackathon-VideoSharing-Platform.Server.csproj", "{96D759CD-7E84-4FED-A518-5475C055898D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hackathon-VideoSharing-Platform.Client", "Hackathon-VideoSharing-Platform\Client\Hackathon-VideoSharing-Platform.Client.csproj", "{DD27E357-110A-4755-9153-6068CF124320}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hackathon-VideoSharing-Platform.Shared", "Hackathon-VideoSharing-Platform\Shared\Hackathon-VideoSharing-Platform.Shared.csproj", "{316B3793-0AE1-441A-BD2F-944632588355}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{96D759CD-7E84-4FED-A518-5475C055898D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96D759CD-7E84-4FED-A518-5475C055898D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96D759CD-7E84-4FED-A518-5475C055898D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96D759CD-7E84-4FED-A518-5475C055898D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD27E357-110A-4755-9153-6068CF124320}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD27E357-110A-4755-9153-6068CF124320}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD27E357-110A-4755-9153-6068CF124320}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD27E357-110A-4755-9153-6068CF124320}.Release|Any CPU.Build.0 = Release|Any CPU
+		{316B3793-0AE1-441A-BD2F-944632588355}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{316B3793-0AE1-441A-BD2F-944632588355}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{316B3793-0AE1-441A-BD2F-944632588355}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{316B3793-0AE1-441A-BD2F-944632588355}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1B3AEAAD-AB29-49C0-A0D0-079F3F8F52FB}
+	EndGlobalSection
+EndGlobal
