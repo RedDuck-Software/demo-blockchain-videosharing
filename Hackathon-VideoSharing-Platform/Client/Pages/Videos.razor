@@ -1,9 +1,13 @@
 ﻿@page "/videos"
+
 @using Hackathon_VideoSharing_Platform.Shared
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inject NavigationManager NavigationManager
 
 <h3>Available Videos</h3>
 
-@foreach(var video in videos)
+@foreach (var video in videos)
 {
     <div>Title: @video.Title</div>
     <div>Price: @video.Price</div>
@@ -11,14 +15,32 @@
 }
 
 @code {
+    private HubConnection hubConnection;
     private List<VideoMetaData> videos = new List<VideoMetaData>
-    {
+{
         new VideoMetaData() { Title = "First video", Price = 10 },
         new VideoMetaData() { Title = "Second video", Price = 20 }
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
+            .Build();
+
+        hubConnection.On<VideoMetaData>("OnBroadcastNewVideoInfo", (video) =>
+        {
+            Console.WriteLine(video);
+            videos.Add(video);
+            this.StateHasChanged(); 
+        });
+
+        await hubConnection.StartAsync();
+    }
+
     public void buyVideo()
-    { 
+    {
+
 
     }
 }
