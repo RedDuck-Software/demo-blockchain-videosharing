@@ -95,7 +95,7 @@
         {
             await Task.Delay(100);
 
-            var nethContract = dict.GetContract(metamaskInterceptor);
+            var nethContract = await dict.GetContract(metamaskInterceptor);
 
             var events = await nethContract.GetPaymentEvents();
 

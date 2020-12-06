@@ -4,6 +4,7 @@ using Hackathon_VideoSharing_Platform.Shared;
 using Nethereum.JsonRpc.Client;
 using Nethereum.Web3;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Hackathon.VideoSharing.Platform.Client
 {
@@ -35,15 +36,17 @@ namespace Hackathon.VideoSharing.Platform.Client
                 throw new System.Exception("Already set");
         }
 
-        public NethereumContract GetContract(RequestInterceptor inte)
+        public async Task<NethereumContract> GetContract(RequestInterceptor inte)
         {
             if (contract == null)
             {
-                var web3 = new Nethereum.Web3.Web3();
+                var web3 = new Web3();
 
                 web3.Client.OverridingRequestInterceptor = inte;
 
                 contract = new NethereumContract(web3, Constants.ContractAddress);
+
+                await contract.InitializeAsync();
             }
 
             return contract;

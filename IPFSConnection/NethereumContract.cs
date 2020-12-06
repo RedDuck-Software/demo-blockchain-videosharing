@@ -13,8 +13,8 @@ namespace CommonLib
     {
         private readonly Web3 web3;
         private readonly HackatonStorageService contract;
-        private readonly HexBigInteger filterNewPaymentEventsForContract;
-        private readonly HexBigInteger videoEventsFilter;
+        private HexBigInteger filterNewPaymentEventsForContract;
+        private HexBigInteger videoEventsFilter;
         private readonly Event<PaymentEventDTO> paymentEvents;
         private readonly Event<VideoPasswordEventDTO> videoEvents;
 
@@ -24,8 +24,12 @@ namespace CommonLib
             this.paymentEvents = web3.Eth.GetEvent<PaymentEventDTO>();
             this.videoEvents = web3.Eth.GetEvent<VideoPasswordEventDTO>();
             this.contract = new HackatonStorageService(web3, contractAddress);
-            this.filterNewPaymentEventsForContract = videoEvents.CreateFilterAsync(paymentEvents.CreateFilterInput()).GetAwaiter().GetResult();
-            this.videoEventsFilter = videoEvents.CreateFilterAsync(videoEvents.CreateFilterInput()).GetAwaiter().GetResult();
+        }
+
+        public async Task InitializeAsync()
+        {
+            this.filterNewPaymentEventsForContract = await videoEvents.CreateFilterAsync(paymentEvents.CreateFilterInput());
+            this.videoEventsFilter = await videoEvents.CreateFilterAsync(videoEvents.CreateFilterInput());
         }
 
         public async Task<IEnumerable<PaymentEventDTO>> GetPaymentEvents()

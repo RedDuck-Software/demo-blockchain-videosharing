@@ -43,7 +43,7 @@
         {
             await Task.Delay(100);
 
-            var nethContract = dictionary.GetContract(metamaskInterceptor);
+            var nethContract = await dictionary.GetContract(metamaskInterceptor);
 
             var events = await nethContract.GetVideoPasswordEvents();
 
@@ -60,7 +60,7 @@
 
         dictionary.SetPPKey(keys);
 
-        var neth = dictionary.GetContract(metamaskInterceptor);
+        var neth = await dictionary.GetContract(metamaskInterceptor);
 
         neth.PublishPublicKeyAsync(keys.PublicKey);
 
@@ -104,7 +104,7 @@
 
     public async Task buyVideo(VideoMetaData video)
     {
-        var nethContract = dictionary.GetContract(metamaskInterceptor);
+        var nethContract = await dictionary.GetContract(metamaskInterceptor);
 
         await nethContract.BuyRequestAsync(dictionary.GetPublic(), video.IPFSHash);
     }
