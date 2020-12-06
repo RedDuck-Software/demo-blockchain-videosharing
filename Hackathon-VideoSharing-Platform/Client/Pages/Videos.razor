@@ -59,7 +59,7 @@ else
         {
             await Task.Delay(100);
 
-            var nethContract = await dictionary.GetContract(metamaskInterceptor);
+            var nethContract = await dictionary.GetContract(metamaskInterceptor, metamaskService);
 
             var events = await nethContract.GetVideoPasswordEvents();
 
@@ -80,14 +80,15 @@ else
             var videoByteString = await VideoUrl(item.IPFSHash);
             dict.Add(item.IPFSHash, videoByteString);
         }
+
         IsSending = false;
         var keys = await http.GetFromJsonAsync<PublicPrivateKey>("/api/crypto/rsa-keys");
 
         dictionary.SetPPKey(keys);
 
-        var neth = await dictionary.GetContract(metamaskInterceptor);
+        var neth = await dictionary.GetContract(metamaskInterceptor, metamaskService);
 
-        neth.PublishPublicKeyAsync(keys.PublicKey);
+        await neth.PublishPublicKeyAsync(keys.PublicKey);
 
         hubConnection = new HubConnectionBuilder()
         .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
@@ -136,7 +137,7 @@ else
 
     public async Task buyVideo(VideoMetaData video)
     {
-        var nethContract = await dictionary.GetContract(metamaskInterceptor);
+        var nethContract = await dictionary.GetContract(metamaskInterceptor, metamaskService);
 
         await nethContract.BuyRequestAsync(dictionary.GetPublic(), video.IPFSHash);
     }

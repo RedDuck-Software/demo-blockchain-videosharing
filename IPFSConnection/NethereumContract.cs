@@ -11,6 +11,7 @@ namespace CommonLib
 {
     public class NethereumContract
     {
+        private readonly string address;
         private readonly Web3 web3;
         private readonly HackatonStorageService contract;
         private HexBigInteger filterNewPaymentEventsForContract;
@@ -18,9 +19,10 @@ namespace CommonLib
         private readonly Event<PaymentEventDTO> paymentEvents;
         private readonly Event<VideoPasswordEventDTO> videoEvents;
 
-        public NethereumContract(Web3 web3, string contractAddress)
+        public NethereumContract(Web3 web3, string contractAddress, string address)
         {
             this.web3 = web3;
+            this.address = address;
             this.paymentEvents = web3.Eth.GetEvent<PaymentEventDTO>();
             this.videoEvents = web3.Eth.GetEvent<VideoPasswordEventDTO>();
             this.contract = new HackatonStorageService(web3, contractAddress);
@@ -63,7 +65,8 @@ namespace CommonLib
         {
             var receipt = await contract.SetPubkeyRequestAndWaitForReceiptAsync(new SetPubkeyFunction()
             {
-                PubKey = publicKey
+                PubKey = publicKey,
+                FromAddress = address
             });
         }
 
@@ -76,15 +79,19 @@ namespace CommonLib
         /// <returns></returns>
         public async Task PublishVideoRequestAsync(decimal etherPrice, string ipfsHash)
         {
+            System.Console.WriteLine("Hash: {0}", ipfsHash);
+
             var receipt = await contract.SetIpfsHashRequestAndWaitForReceiptAsync(new SetIpfsHashFunction
             {
-                IpfsHash = ipfsHash
+                IpfsHash = ipfsHash,
+                FromAddress = address,
             });
 
             var receipt2 = await contract.SetPriceRequestAndWaitForReceiptAsync(new SetPriceFunction()
             {
                 Price = Web3.Convert.ToWei(etherPrice, Nethereum.Util.UnitConversion.EthUnit.Ether),
-                IpfsHash = ipfsHash                
+                IpfsHash = ipfsHash,
+                FromAddress = address
             });
         }
 
@@ -100,6 +107,7 @@ namespace CommonLib
             {
                 PubKey = publicKey,
                 IpfsHash = ipfsHash,
+                FromAddress = address,
             });
         }
 
@@ -116,7 +124,8 @@ namespace CommonLib
             {
                 IpfsHash = ipfsHash, 
                 EncryptedPassword = encryptedPassword,
-                BuyerAddress = recepientAddress
+                BuyerAddress = recepientAddress,
+                FromAddress = address
             });
         }
     }

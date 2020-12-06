@@ -95,7 +95,7 @@
         {
             await Task.Delay(100);
 
-            var nethContract = await dict.GetContract(metamaskInterceptor);
+            var nethContract = await dict.GetContract(metamaskInterceptor, metamaskService);
 
             var events = await nethContract.GetPaymentEvents();
 
@@ -175,15 +175,15 @@
 
         Console.WriteLine("Got hash: {0}", hash);
 
-        var videoMetadata = new VideoMetaData { AddressAuthor = SelectedAccount, Price = videoMetaData.Price, Title = videoMetaData.Title };
+        videoMetaData.AddressAuthor = SelectedAccount;
 
-        dict.Add(videoMetadata, key);
+        dict.Add(videoMetaData, key);
 
-        await hubConnection.SendAsync("BroadcastNewVideoInfo", videoMetadata);
+        await hubConnection.SendAsync("BroadcastNewVideoInfo", videoMetaData);
 
-        var nethContract = await dict.GetContract(metamaskInterceptor);
+        var nethContract = await dict.GetContract(metamaskInterceptor, metamaskService);
 
-        await nethContract.PublishVideoRequestAsync(videoMetadata.Price, videoMetadata.IPFSHash);
+        await nethContract.PublishVideoRequestAsync(videoMetaData.Price, videoMetaData.IPFSHash);
     }
 
     public async ValueTask DisposeAsync()

@@ -7,6 +7,6 @@ namespace Hackathon.VideoSharing.Platform.Client
 {
     public static class Constants
     {
-        public const string ContractAddress = "";
+        public const string ContractAddress = "0x34cb41AE2e062f681CA432c18eF602942CB0a0F5";
     }
 }

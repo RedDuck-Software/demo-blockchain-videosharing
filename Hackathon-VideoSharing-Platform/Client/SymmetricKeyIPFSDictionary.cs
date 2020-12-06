@@ -1,5 +1,6 @@
 ﻿using CommonLib;
 using Hackathon.VideoSharing.Platform.Shared.DTOs;
+using Hackathon_VideoSharing_Platform.Client;
 using Hackathon_VideoSharing_Platform.Shared;
 using Nethereum.JsonRpc.Client;
 using Nethereum.Web3;
@@ -36,15 +37,16 @@ namespace Hackathon.VideoSharing.Platform.Client
                 throw new System.Exception("Already set");
         }
 
-        public async Task<NethereumContract> GetContract(RequestInterceptor inte)
+        public async Task<NethereumContract> GetContract(RequestInterceptor inte, MetamaskService metamaskService)
         {
             if (contract == null)
             {
                 var web3 = new Web3();
 
                 web3.Client.OverridingRequestInterceptor = inte;
+                var address = await metamaskService.GetSelectedAccount();
 
-                contract = new NethereumContract(web3, Constants.ContractAddress);
+                contract = new NethereumContract(web3, Constants.ContractAddress, address);
 
                 await contract.InitializeAsync();
             }
