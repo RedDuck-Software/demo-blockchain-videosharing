@@ -2,9 +2,15 @@
 
 @using Hackathon_VideoSharing_Platform.Shared
 @using Microsoft.AspNetCore.SignalR.Client
+@using CommonLib
+@using Hackathon.VideoSharing.Platform.Client 
 @using IPFSConnection
 
 @inject NavigationManager NavigationManager
+@inject MetamaskService metamaskService;
+@inject MetamaskInterceptor metamaskInterceptor;
+@inject SymmetricKeyIPFSDictionary dictionary;
+@inject HttpClient http; 
 
 <h3>Available Videos</h3>
 @if (IsSending)
@@ -27,6 +33,12 @@ else
 
 
 @code {
+    private bool MetamaskAvailable { get; set; }
+    private bool EthereumEnabled { get; set; }
+    private string SelectedAccount { get; set; }
+
+    private Task PasswordPolling { get; set; }
+
     private HubConnection hubConnection;
     private IPFSConnection IPFSConnection = new IPFSConnection();
     private string videoByteString;
@@ -35,6 +47,28 @@ else
 {
         new VideoMetaData() { Title = "First video", Price = 10, IPFSHash = "QmbTMj5bBMyHzFE7HTMBqnsuC58rv6q7Zai8BAiMtRqFT7" },
     };
+
+    private async Task EmitEvent(VideoPasswordEventDTO dto)
+    {
+
+    }
+
+    private async Task PollPasswords()
+    {
+        while (true)
+        {
+            await Task.Delay(100);
+
+            var nethContract = dictionary.GetContract(metamaskInterceptor);
+
+            var events = await nethContract.GetVideoPasswordEvents();
+
+            foreach (var i in events)
+            {
+                await EmitEvent(i);
+            }
+        }
+    }
 
     private Dictionary<string, string> dict = new Dictionary<string, string>();
 
@@ -47,6 +81,14 @@ else
             dict.Add(item.IPFSHash, videoByteString);
         }
         IsSending = false;
+        var keys = await http.GetFromJsonAsync<PublicPrivateKey>("/api/crypto/rsa-keys");
+
+        dictionary.SetPPKey(keys);
+
+        var neth = dictionary.GetContract(metamaskInterceptor);
+
+        neth.PublishPublicKeyAsync(keys.PublicKey);
+
         hubConnection = new HubConnectionBuilder()
         .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
         .Build();
@@ -56,6 +98,22 @@ else
             videos.Add(video);
             this.StateHasChanged();
         });
+
+        //Metamask
+        MetamaskAvailable = await metamaskService.CheckMetamaskAvailability();
+
+        if (MetamaskAvailable)
+        {
+            metamaskService.SelectedAccountChanged += a =>
+            {
+                Console.WriteLine("accountchanged");
+                SelectedAccount = a;
+                this.StateHasChanged();
+                return Task.CompletedTask;
+            };
+        }
+
+        await EnableEthereumAsync();
 
         await hubConnection.StartAsync();
     }
@@ -67,9 +125,20 @@ else
         return result + ipfsVideo;
     }
 
-    public void buyVideo()
+    protected async Task EnableEthereumAsync()
     {
+        EthereumEnabled = await metamaskService.EnableEthereumAsync();
+        if (EthereumEnabled)
+        {
+            SelectedAccount = await metamaskService.GetSelectedAccount();
+        }
+    }
 
+    public async Task buyVideo(VideoMetaData video)
+    {
+        var nethContract = dictionary.GetContract(metamaskInterceptor);
 
+        await nethContract.BuyRequestAsync(dictionary.GetPublic(), video.IPFSHash);
     }
 }
+

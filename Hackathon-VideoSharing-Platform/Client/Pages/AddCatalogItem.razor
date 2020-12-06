@@ -4,9 +4,7 @@
 @using Hackathon.VideoSharing.Platform.Shared.DTOs
 @using Microsoft.AspNetCore.SignalR.Client
 @using Hackathon.VideoSharing.Platform.Client
-@using System.Security.Cryptography
-@using System.Text
-@using System.IO
+@using CommonLib 
 
 @inject SymmetricKeyIPFSDictionary dict
 @inject NavigationManager NavigationManager
@@ -17,7 +15,6 @@
 @implements IAsyncDisposable
 
 <h3>Add CatalogItem</h3>
-
 
 <div class="container">
     <div class="row">
@@ -67,8 +64,6 @@
     </div>
 </div>
 
-
-
 @code {
     private string password;
     private VideoMetaData videoMetaData = new VideoMetaData();
@@ -89,6 +84,28 @@
         IsSending = false;
     }
 
+    private async Task EmitEvent(PaymentEventDTO dto)
+    {
+
+    }
+
+    private async Task PollPasswords()
+    {
+        while (true)
+        {
+            await Task.Delay(100);
+
+            var nethContract = dict.GetContract(metamaskInterceptor);
+
+            var events = await nethContract.GetPaymentEvents();
+
+            foreach (var i in events)
+            {
+                await EmitEvent(i);
+            }
+        }
+    }
+
     protected async Task EnableEthereumAsync()
     {
         EthereumEnabled = await metamaskService.EnableEthereumAsync();
@@ -96,7 +113,6 @@
         {
             SelectedAccount = await metamaskService.GetSelectedAccount();
         }
-
     }
 
     private async Task OnFileSend(InputFileChangeEventArgs e)
@@ -164,6 +180,13 @@
         dict.Add(videoMetadata, key);
 
         await hubConnection.SendAsync("BroadcastNewVideoInfo", videoMetadata);
+
+        var web3 = new Nethereum.Web3.Web3();
+        web3.Client.OverridingRequestInterceptor = metamaskInterceptor;
+
+        var nethContract = new NethereumContract(web3, Constants.ContractAddress);
+
+        await nethContract.PublishVideoRequestAsync(videoMetadata.Price, videoMetadata.IPFSHash);
     }
 
     public async ValueTask DisposeAsync()

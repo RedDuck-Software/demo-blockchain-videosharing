@@ -1,4 +1,5 @@
 using Nethereum.Web3;
+using Nethereum.Web3.Accounts;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
@@ -25,7 +26,8 @@ namespace NUnitTestProject1
         [Test]
         public async Task Test2()
         {
-            var web3 = new Web3("");
+            var account = new Account("6aad9d4692b13433e57a2909c0150ce4ad988da2860f949f5f0c3ce2669438b6");
+            var web3 = new Web3(account, "https://ropsten.infura.io/v3/aebdb8f916a34d23be9a57ea2722417c");
 
             var lib = new CommonLib.NethereumContract(web3);
 
