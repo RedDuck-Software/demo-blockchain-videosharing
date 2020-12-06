@@ -1,12 +1,19 @@
 ﻿@page "/AddCatalogItem"
 @using Hackathon_VideoSharing_Platform.Shared
+@using Hackathon_VideoSharing_Platform.Shared.DTOs
+@using Hackathon.VideoSharing.Platform.Shared.DTOs
 @using Microsoft.AspNetCore.SignalR.Client
 @using Hackathon.VideoSharing.Platform.Client
+@using System.Security.Cryptography
+@using System.Text
+@using System.IO
+
 @inject SymmetricKeyIPFSDictionary dict
 @inject NavigationManager NavigationManager
 @inject IJSRuntime jsRuntime;
 @inject MetamaskService metamaskService;
 @inject MetamaskInterceptor metamaskInterceptor;
+@inject HttpClient http
 @implements IAsyncDisposable
 
 <h3>Add CatalogItem</h3>
@@ -37,6 +44,11 @@
                         <ValidationMessage For="@(() => videoMetaData.Price)" />
                     </div>
                     <div class="form-group">
+                        <label for="password">Password</label>
+                        <InputText id="password" class="form-control" @bind-Value="password"/>
+                        <ValidationMessage For="@(() => password)"></ValidationMessage>
+                    </div>
+                    <div class="form-group">
                         <label for="photo">Upload video</label>
                         <InputFile OnChange="@OnFileSend" />
                     </div>
@@ -58,15 +70,15 @@
 
 
 @code {
+    private string password;
     private VideoMetaData videoMetaData = new VideoMetaData();
-    private byte[] videoFile;
+    private byte[] videoBytes;
     private HubConnection hubConnection;
 
     //Metamask
     bool MetamaskAvailable { get; set; }
     bool EthereumEnabled { get; set; }
     string SelectedAccount { get; set; }
-
 
     private bool IsSending = false;
 
@@ -89,15 +101,12 @@
 
     private async Task OnFileSend(InputFileChangeEventArgs e)
     {
-        var a = e.File;
+        videoBytes = new byte[e.File.Size];
+        using var stream = e.File.OpenReadStream();
 
-        var buffer = new byte[e.File.Size];
-        using (var readStream = e.File.OpenReadStream())
-        {
-            await readStream.ReadAsync(buffer);
-        }
+        await stream.ReadAsync(videoBytes);
 
-        videoFile = buffer;
+        Console.WriteLine(videoBytes[10]);
     }
 
     protected override async Task OnInitializedAsync()
@@ -113,11 +122,12 @@
 
         if (MetamaskAvailable)
         {
-            metamaskService.SelectedAccountChanged += async a =>
+            metamaskService.SelectedAccountChanged += a =>
             {
                 Console.WriteLine("accountchanged");
                 SelectedAccount = a;
                 this.StateHasChanged();
+                return Task.CompletedTask;
             };
         }
 
@@ -128,9 +138,23 @@
     {
         var client = new IPFSConnection.IPFSConnection();
 
-        var key = "HUI"; // stub
+        var key = password;
 
-        var hash = await client.UploadDataAsync(videoFile);
+        var encryptedRes = await http.PostAsJsonAsync<CryptoRequest>("api/crypto/encrypt", new CryptoRequest()
+        {
+            Password = key,
+            Data64 = Convert.ToBase64String(videoBytes)
+        });
+
+        Console.WriteLine(key);
+        Console.WriteLine(encryptedRes.StatusCode);
+        Console.WriteLine("Encrypted video");
+
+        var encryptedVideo64 = await encryptedRes.Content.ReadAsStringAsync();
+        var encryptedVideoBytes = Convert.FromBase64String(encryptedVideo64);
+
+        var hash = await client.UploadDataAsync(encryptedVideoBytes);
+
         videoMetaData.IPFSHash = hash;
 
         Console.WriteLine("Got hash: {0}", hash);
