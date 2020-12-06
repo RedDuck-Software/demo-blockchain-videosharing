@@ -1,6 +1,7 @@
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using NUnit.Framework;
+using System;
 using System.Threading.Tasks;
 
 namespace NUnitTestProject1
@@ -31,6 +32,20 @@ namespace NUnitTestProject1
             var lib = new CommonLib.NethereumContract(web3);
 
             await lib.BuyVideoRequestAsync("", "", "", 0.005m);
+        }
+
+        [Test]
+        public async Task StreamVideo()
+        {
+            var connect = new IPFSConnection.IPFSConnection();
+
+            var expected = System.Text.Encoding.UTF8.GetBytes("tratata");
+
+            var fileHash = await connect.UploadDataAsync(expected);
+
+            var actual = await connect.GetVideoData64(fileHash);
+
+            Assert.AreEqual(expected, actual);
         }
     }
 }

@@ -37,5 +37,28 @@ namespace IPFSConnection
 
             return token["IpfsHash"].ToString();
         }
+
+        //public async Task<byte[]> StreamVideo(string ipfsHash)
+        public async Task<byte[]> GetVideoData64(string ipfsHash)
+        {
+            var http = new HttpClient()
+            {
+                BaseAddress = new Uri("https://gateway.ipfs.io/")
+            };
+
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"ipfs/{ipfsHash}", UriKind.Relative)
+            };
+
+            var response = await http.SendAsync(request);
+
+            response.EnsureSuccessStatusCode();
+
+            var respContent = await response.Content.ReadAsByteArrayAsync();
+          
+            return respContent;
+        }
     }
 }

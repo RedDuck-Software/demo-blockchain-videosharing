@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using CommonLib
 @using Hackathon.VideoSharing.Platform.Client 
+@using IPFSConnection
 
 @inject NavigationManager NavigationManager
 @inject MetamaskService metamaskService;
@@ -12,13 +13,24 @@
 @inject HttpClient http; 
 
 <h3>Available Videos</h3>
-
-@foreach (var video in videos)
+@if (IsSending)
 {
-    <div>Title: @video.Title</div>
-    <div>Price: @video.Price</div>
-    <button class="btn btn-primary" @onclick="@(() => buyVideo(video))">Buy</button>
+    <p>Loading...</p>
 }
+else
+{
+    @foreach (var video in videos)
+    {
+        <div class="embed-responsive embed-responsive-21by9">
+            <iframe class="embed-responsive-item" src="@dict[video.IPFSHash]"></iframe>
+        </div>
+        <div>Title: @video.Title</div>
+        <div>Price: @video.Price</div>
+        <button class="btn btn-primary" @onclick="buyVideo">Buy</button>
+    }
+}
+
+
 
 @code {
     private bool MetamaskAvailable { get; set; }
@@ -28,8 +40,12 @@
     private Task PasswordPolling { get; set; }
 
     private HubConnection hubConnection;
+    private IPFSConnection IPFSConnection = new IPFSConnection();
+    private string videoByteString;
+    private bool IsSending;
     private List<VideoMetaData> videos = new List<VideoMetaData>
-    {
+{
+        new VideoMetaData() { Title = "First video", Price = 10, IPFSHash = "QmbTMj5bBMyHzFE7HTMBqnsuC58rv6q7Zai8BAiMtRqFT7" },
     };
 
     private async Task EmitEvent(VideoPasswordEventDTO dto)
@@ -54,8 +70,17 @@
         }
     }
 
+    private Dictionary<string, string> dict = new Dictionary<string, string>();
+
     protected override async Task OnInitializedAsync()
     {
+        IsSending = true;
+        foreach (var item in videos)
+        {
+            var videoByteString = await VideoUrl(item.IPFSHash);
+            dict.Add(item.IPFSHash, videoByteString);
+        }
+        IsSending = false;
         var keys = await http.GetFromJsonAsync<PublicPrivateKey>("/api/crypto/rsa-keys");
 
         dictionary.SetPPKey(keys);
@@ -65,8 +90,8 @@
         neth.PublishPublicKeyAsync(keys.PublicKey);
 
         hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
-            .Build();
+        .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
+        .Build();
 
         hubConnection.On<VideoMetaData>("OnBroadcastNewVideoInfo", (video) =>
         {
@@ -91,6 +116,13 @@
         await EnableEthereumAsync();
 
         await hubConnection.StartAsync();
+    }
+    protected async Task<string> VideoUrl(string str)
+    {
+        string result = "data:video/mp4;base64,";
+        var video = await IPFSConnection.GetVideoData64(str);
+        string ipfsVideo = Convert.ToBase64String(video);
+        return result + ipfsVideo;
     }
 
     protected async Task EnableEthereumAsync()
