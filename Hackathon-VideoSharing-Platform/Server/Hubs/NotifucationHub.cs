@@ -9,7 +9,7 @@ namespace Hackathon_VideoSharing_Platform.Server.Hubs
     {
         public async Task BroadcastNewVideoInfo(VideoMetaData videoMetaData)
         {
-            await Clients.All.SendAsync("OnBroadcastNewVideoInfo", videoMetaData);
+            await Clients.Others.SendAsync("OnBroadcastNewVideoInfo", videoMetaData);
             Debug.WriteLine("Send video: VideoMetaData:  \nTitle:{0}, \nPrice{1}, \n Address:{2}", videoMetaData.Title, videoMetaData.Price, videoMetaData.AddressAuthor);
         }
     }
