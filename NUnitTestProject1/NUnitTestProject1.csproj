@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IPFSConnection\IPFSConnection.csproj" />
+    <ProjectReference Include="..\IPFSConnection\CommonLib.csproj" />
   </ItemGroup>
 
 </Project>

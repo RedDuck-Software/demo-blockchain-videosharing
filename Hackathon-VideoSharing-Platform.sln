@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hackathon-VideoSharing-Plat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hackathon-VideoSharing-Platform.Shared", "Hackathon-VideoSharing-Platform\Shared\Hackathon-VideoSharing-Platform.Shared.csproj", "{316B3793-0AE1-441A-BD2F-944632588355}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPFSConnection", "IPFSConnection\IPFSConnection.csproj", "{FCD64916-F640-4371-8496-D2EFC80995CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonLib", "IPFSConnection\CommonLib.csproj", "{FCD64916-F640-4371-8496-D2EFC80995CF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NUnitTestProject1", "NUnitTestProject1\NUnitTestProject1.csproj", "{8B33E37F-CA07-4588-AEA9-A3AB299FAA9B}"
 EndProject
