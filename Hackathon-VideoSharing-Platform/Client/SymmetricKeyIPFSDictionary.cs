@@ -10,5 +10,7 @@ namespace Hackathon.VideoSharing.Platform.Client
         public void Add(VideoMetaData metadata, string symmKey) => dictionary.Add(metadata, symmKey);
 
         public string Get(VideoMetaData metadata) => dictionary[metadata];
+
+        public Dictionary<VideoMetaData, string> GetVideos => new Dictionary<VideoMetaData, string>(dictionary);
     }
 }
