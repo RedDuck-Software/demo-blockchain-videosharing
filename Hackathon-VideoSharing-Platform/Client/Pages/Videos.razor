@@ -26,7 +26,7 @@ else
         </div>
         <div>Title: @video.Title</div>
         <div>Price: @video.Price</div>
-        <button class="btn btn-primary" @onclick="buyVideo">Buy</button>
+        <button class="btn btn-primary" @onclick="@(() => buyVideo(video))">Buy</button>
     }
 }
 
