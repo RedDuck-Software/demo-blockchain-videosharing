@@ -16,14 +16,15 @@ contract HackatonStorage {
         address _from,
         address _to,
         uint256 amount,
-        uint256 ipfsHash
+        uint256 ipfsHash,
+        uint256 pubKey
     );
 
-    function pay(address payable _to, uint256 ipfsHash) public payable {
-        require(msg.value >= prices[ipfsHash]);
+    function pay(address payable _to, uint256 ipfsHash, uint256 pubKey) public payable {
+        require(msg.value >= prices[ipfsHash] && pubKeys[msg.sender] == pubKey);
 
         _to.transfer(msg.value);
-        emit Payment(msg.sender, _to, msg.value, ipfsHash);
+        emit Payment(msg.sender, _to, msg.value, ipfsHash, pubKey);
     }
     
     function setPrice(uint256 ipfsHash, uint256 price) public {
