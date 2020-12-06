@@ -1,9 +1,20 @@
 ﻿@page "/AddCatalogItem"
 @using Hackathon_VideoSharing_Platform.Shared
+@using Hackathon_VideoSharing_Platform.Shared.DTOs
+@using Hackathon.VideoSharing.Platform.Shared.DTOs
 @using Microsoft.AspNetCore.SignalR.Client
+@using Hackathon.VideoSharing.Platform.Client
+@using System.Security.Cryptography
+@using System.Text
+@using System.IO
+
+@inject SymmetricKeyIPFSDictionary dict
 @inject NavigationManager NavigationManager
+@inject IJSRuntime jsRuntime;
+@inject MetamaskService metamaskService;
+@inject MetamaskInterceptor metamaskInterceptor;
+@inject HttpClient http
 @implements IAsyncDisposable
-@using BlazorInputFile
 
 <h3>Add CatalogItem</h3>
 
@@ -33,38 +44,69 @@
                         <ValidationMessage For="@(() => videoMetaData.Price)" />
                     </div>
                     <div class="form-group">
-                        <label for="photo">Upload photo</label>
-                        @*<InputFile OnChange="@FileSendNotification" />*@
+                        <label for="password">Password</label>
+                        <InputText id="password" class="form-control" @bind-Value="password"/>
+                        <ValidationMessage For="@(() => password)"></ValidationMessage>
+                    </div>
+                    <div class="form-group">
+                        <label for="photo">Upload video</label>
+                        <InputFile OnChange="@OnFileSend" />
                     </div>
 
-                    <button type="submit" @onclick="SendMessage" class="btn btn-primary">Add Film</button>
+                    @if (MetamaskAvailable && EthereumEnabled)
+                    {
+                        <button type="submit" class="btn btn-primary">Add Film</button>
+                    }
+                    else
+                    {
+                        <button @onclick="EnableEthereumAsync">Connect metamask wallet</button>
+                    }
                 </EditForm>
-            </div>}
+            </div>
+        }
     </div>
 </div>
 
 
 
 @code {
+    private string password;
     private VideoMetaData videoMetaData = new VideoMetaData();
-    //private const string HtmlImageIdentifier = "image/";
-    //private static bool ValidateFile(IFileListEntry file) => file.Type.StartsWith(HtmlImageIdentifier);
+    private byte[] videoBytes;
     private HubConnection hubConnection;
-    private List<string> messages = new List<string>();
+
+    //Metamask
+    bool MetamaskAvailable { get; set; }
+    bool EthereumEnabled { get; set; }
+    string SelectedAccount { get; set; }
 
     private bool IsSending = false;
 
     private async Task HandleAdding()
     {
         IsSending = true;
-        //await client.PostJsonAsync("api/FeatureManagement/AddFeature", addFeatureModel);
+        await SendMessage();
         IsSending = false;
-        //NavigationManager.NavigateTo("/FeatureManagement");
     }
 
-    private async Task FileSendNotification(IFileListEntry[] files)
+    protected async Task EnableEthereumAsync()
     {
+        EthereumEnabled = await metamaskService.EnableEthereumAsync();
+        if (EthereumEnabled)
+        {
+            SelectedAccount = await metamaskService.GetSelectedAccount();
+        }
 
+    }
+
+    private async Task OnFileSend(InputFileChangeEventArgs e)
+    {
+        videoBytes = new byte[e.File.Size];
+        using var stream = e.File.OpenReadStream();
+
+        await stream.ReadAsync(videoBytes);
+
+        Console.WriteLine(videoBytes[10]);
     }
 
     protected override async Task OnInitializedAsync()
@@ -73,21 +115,59 @@
             .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
             .Build();
 
-        //hubConnection.On<VideoMetaData>("OnBroadcastNewVideoInfo", (vmd) =>
-        //{
-        //    var encodedMsg = $"{vmd.AddressAuthor}: {vmd.Title} - {vmd.Price}";
-        //    messages.Add(encodedMsg);
-        //    StateHasChanged();
-        //});
-
         await hubConnection.StartAsync();
+
+        //Metamask
+        MetamaskAvailable = await metamaskService.CheckMetamaskAvailability();
+
+        if (MetamaskAvailable)
+        {
+            metamaskService.SelectedAccountChanged += a =>
+            {
+                Console.WriteLine("accountchanged");
+                SelectedAccount = a;
+                this.StateHasChanged();
+                return Task.CompletedTask;
+            };
+        }
+
+        await EnableEthereumAsync();
     }
 
-    Task SendMessage() =>
-        hubConnection.SendAsync("BroadcastNewVideoInfo", new VideoMetaData { AddressAuthor = "", Price = videoMetaData.Price, Title = videoMetaData.Title });
+    async Task SendMessage()
+    {
+        var client = new IPFSConnection.IPFSConnection();
+
+        var key = password;
+
+        var encryptedRes = await http.PostAsJsonAsync<CryptoRequest>("api/crypto/encrypt", new CryptoRequest()
+        {
+            Password = key,
+            Data64 = Convert.ToBase64String(videoBytes)
+        });
+
+        Console.WriteLine(key);
+        Console.WriteLine(encryptedRes.StatusCode);
+        Console.WriteLine("Encrypted video");
+
+        var encryptedVideo64 = await encryptedRes.Content.ReadAsStringAsync();
+        var encryptedVideoBytes = Convert.FromBase64String(encryptedVideo64);
+
+        var hash = await client.UploadDataAsync(encryptedVideoBytes);
+
+        videoMetaData.IPFSHash = hash;
+
+        Console.WriteLine("Got hash: {0}", hash);
+
+        var videoMetadata = new VideoMetaData { AddressAuthor = SelectedAccount, Price = videoMetaData.Price, Title = videoMetaData.Title };
+
+        dict.Add(videoMetadata, key);
+
+        await hubConnection.SendAsync("BroadcastNewVideoInfo", videoMetadata);
+    }
 
     public async ValueTask DisposeAsync()
     {
-        await hubConnection.DisposeAsync();
+        @*await hubConnection.DisposeAsync();*@
     }
 }
