@@ -1,3 +1,4 @@
+using CommonLib;
 using Hackathon.VideoSharing.Platform.Client;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;

@@ -2,8 +2,13 @@
 
 @using Hackathon_VideoSharing_Platform.Shared
 @using Microsoft.AspNetCore.SignalR.Client
+@using CommonLib
+@using Hackathon.VideoSharing.Platform.Client 
 
 @inject NavigationManager NavigationManager
+@inject MetamaskService metamaskService;
+@inject MetamaskInterceptor metamaskInterceptor;
+@inject SymmetricKeyIPFSDictionary dictionary;
 
 <h3>Available Videos</h3>
 
@@ -11,15 +16,17 @@
 {
     <div>Title: @video.Title</div>
     <div>Price: @video.Price</div>
-    <button class="btn btn-primary" @onclick="buyVideo">Buy</button>
+    <button class="btn btn-primary" @onclick="@(() => buyVideo(video))">Buy</button>
 }
 
 @code {
+    private bool MetamaskAvailable { get; set; }
+    private bool EthereumEnabled { get; set; }
+    private string SelectedAccount { get; set; }
+
     private HubConnection hubConnection;
     private List<VideoMetaData> videos = new List<VideoMetaData>
-{
-        new VideoMetaData() { Title = "First video", Price = 10 },
-        new VideoMetaData() { Title = "Second video", Price = 20 }
+    {
     };
 
     protected override async Task OnInitializedAsync()
@@ -31,15 +38,46 @@
         hubConnection.On<VideoMetaData>("OnBroadcastNewVideoInfo", (video) =>
         {
             videos.Add(video);
-            this.StateHasChanged(); 
+            this.StateHasChanged();
         });
+
+        //Metamask
+        MetamaskAvailable = await metamaskService.CheckMetamaskAvailability();
+
+        if (MetamaskAvailable)
+        {
+            metamaskService.SelectedAccountChanged += a =>
+            {
+                Console.WriteLine("accountchanged");
+                SelectedAccount = a;
+                this.StateHasChanged();
+                return Task.CompletedTask;
+            };
+        }
+
+        await EnableEthereumAsync();
 
         await hubConnection.StartAsync();
     }
 
-    public void buyVideo()
+    protected async Task EnableEthereumAsync()
     {
+        EthereumEnabled = await metamaskService.EnableEthereumAsync();
+        if (EthereumEnabled)
+        {
+            SelectedAccount = await metamaskService.GetSelectedAccount();
+        }
+    }   
 
+    public async Task buyVideo(VideoMetaData video)
+    {
+        var web3 = new Nethereum.Web3.Web3();
 
+        web3.Client.OverridingRequestInterceptor = metamaskInterceptor;
+
+        var nethContract = new NethereumContract(web3, Constants.ContractAddress);
+
+        await nethContract.BuyRequestAsync(dictionary.UserPublicKey, video.IPFSHash);
     }
 }
+
