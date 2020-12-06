@@ -1,7 +1,14 @@
+using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Numerics;
+using Nethereum.Hex.HexTypes;
+using Nethereum.ABI.FunctionEncoding.Attributes;
+using Nethereum.Web3;
 using Nethereum.RPC.Eth.DTOs;
+using Nethereum.Contracts.CQS;
 using Nethereum.Contracts.ContractHandlers;
+using Nethereum.Contracts;
 using System.Threading;
 using Contracts.Contracts.HackatonStorage.ContractDefinition;
 
@@ -35,25 +42,57 @@ namespace Contracts.Contracts.HackatonStorage
             ContractHandler = web3.Eth.GetContractHandler(contractAddress);
         }
 
-        public Task<BigInteger> GetIpfsHashQueryAsync(GetIpfsHashFunction getIpfsHashFunction, BlockParameter blockParameter = null)
+        public Task<string> EmitVideoPasswordRequestAsync(EmitVideoPasswordFunction emitVideoPasswordFunction)
         {
-            return ContractHandler.QueryAsync<GetIpfsHashFunction, BigInteger>(getIpfsHashFunction, blockParameter);
+             return ContractHandler.SendRequestAsync(emitVideoPasswordFunction);
         }
+
+        public Task<TransactionReceipt> EmitVideoPasswordRequestAndWaitForReceiptAsync(EmitVideoPasswordFunction emitVideoPasswordFunction, CancellationTokenSource cancellationToken = null)
+        {
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(emitVideoPasswordFunction, cancellationToken);
+        }
+
+        public Task<string> EmitVideoPasswordRequestAsync(string encryptedPassword, string ipfsHash, string buyerAddress)
+        {
+            var emitVideoPasswordFunction = new EmitVideoPasswordFunction();
+                emitVideoPasswordFunction.EncryptedPassword = encryptedPassword;
+                emitVideoPasswordFunction.IpfsHash = ipfsHash;
+                emitVideoPasswordFunction.BuyerAddress = buyerAddress;
+            
+             return ContractHandler.SendRequestAsync(emitVideoPasswordFunction);
+        }
+
+        public Task<TransactionReceipt> EmitVideoPasswordRequestAndWaitForReceiptAsync(string encryptedPassword, string ipfsHash, string buyerAddress, CancellationTokenSource cancellationToken = null)
+        {
+            var emitVideoPasswordFunction = new EmitVideoPasswordFunction();
+                emitVideoPasswordFunction.EncryptedPassword = encryptedPassword;
+                emitVideoPasswordFunction.IpfsHash = ipfsHash;
+                emitVideoPasswordFunction.BuyerAddress = buyerAddress;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(emitVideoPasswordFunction, cancellationToken);
+        }
+
+        public Task<string> GetIpfsHashQueryAsync(GetIpfsHashFunction getIpfsHashFunction, BlockParameter blockParameter = null)
+        {
+            return ContractHandler.QueryAsync<GetIpfsHashFunction, string>(getIpfsHashFunction, blockParameter);
+        }
+
         
-        public Task<BigInteger> GetIpfsHashQueryAsync(string addr, BlockParameter blockParameter = null)
+        public Task<string> GetIpfsHashQueryAsync(string addr, BlockParameter blockParameter = null)
         {
             var getIpfsHashFunction = new GetIpfsHashFunction();
                 getIpfsHashFunction.Addr = addr;
             
-            return ContractHandler.QueryAsync<GetIpfsHashFunction, BigInteger>(getIpfsHashFunction, blockParameter);
+            return ContractHandler.QueryAsync<GetIpfsHashFunction, string>(getIpfsHashFunction, blockParameter);
         }
 
         public Task<BigInteger> GetPriceQueryAsync(GetPriceFunction getPriceFunction, BlockParameter blockParameter = null)
         {
             return ContractHandler.QueryAsync<GetPriceFunction, BigInteger>(getPriceFunction, blockParameter);
         }
+
         
-        public Task<BigInteger> GetPriceQueryAsync(BigInteger ipfsHash, BlockParameter blockParameter = null)
+        public Task<BigInteger> GetPriceQueryAsync(string ipfsHash, BlockParameter blockParameter = null)
         {
             var getPriceFunction = new GetPriceFunction();
                 getPriceFunction.IpfsHash = ipfsHash;
@@ -61,18 +100,18 @@ namespace Contracts.Contracts.HackatonStorage
             return ContractHandler.QueryAsync<GetPriceFunction, BigInteger>(getPriceFunction, blockParameter);
         }
 
-        public Task<BigInteger> GetPubKeyQueryAsync(GetPubKeyFunction getPubKeyFunction, BlockParameter blockParameter = null)
+        public Task<string> GetPubKeyQueryAsync(GetPubKeyFunction getPubKeyFunction, BlockParameter blockParameter = null)
         {
-            return ContractHandler.QueryAsync<GetPubKeyFunction, BigInteger>(getPubKeyFunction, blockParameter);
+            return ContractHandler.QueryAsync<GetPubKeyFunction, string>(getPubKeyFunction, blockParameter);
         }
 
         
-        public Task<BigInteger> GetPubKeyQueryAsync(string addr, BlockParameter blockParameter = null)
+        public Task<string> GetPubKeyQueryAsync(string addr, BlockParameter blockParameter = null)
         {
             var getPubKeyFunction = new GetPubKeyFunction();
                 getPubKeyFunction.Addr = addr;
             
-            return ContractHandler.QueryAsync<GetPubKeyFunction, BigInteger>(getPubKeyFunction, blockParameter);
+            return ContractHandler.QueryAsync<GetPubKeyFunction, string>(getPubKeyFunction, blockParameter);
         }
 
         public Task<string> PayRequestAsync(PayFunction payFunction)
@@ -85,7 +124,7 @@ namespace Contracts.Contracts.HackatonStorage
              return ContractHandler.SendRequestAndWaitForReceiptAsync(payFunction, cancellationToken);
         }
 
-        public Task<string> PayRequestAsync(string to, BigInteger ipfsHash, BigInteger pubKey)
+        public Task<string> PayRequestAsync(string to, string ipfsHash, string pubKey)
         {
             var payFunction = new PayFunction();
                 payFunction.To = to;
@@ -95,7 +134,7 @@ namespace Contracts.Contracts.HackatonStorage
              return ContractHandler.SendRequestAsync(payFunction);
         }
 
-        public Task<TransactionReceipt> PayRequestAndWaitForReceiptAsync(string to, BigInteger ipfsHash, BigInteger pubKey, CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> PayRequestAndWaitForReceiptAsync(string to, string ipfsHash, string pubKey, CancellationTokenSource cancellationToken = null)
         {
             var payFunction = new PayFunction();
                 payFunction.To = to;
@@ -115,7 +154,7 @@ namespace Contracts.Contracts.HackatonStorage
              return ContractHandler.SendRequestAndWaitForReceiptAsync(setIpfsHashFunction, cancellationToken);
         }
 
-        public Task<string> SetIpfsHashRequestAsync(BigInteger ipfsHash)
+        public Task<string> SetIpfsHashRequestAsync(string ipfsHash)
         {
             var setIpfsHashFunction = new SetIpfsHashFunction();
                 setIpfsHashFunction.IpfsHash = ipfsHash;
@@ -123,7 +162,7 @@ namespace Contracts.Contracts.HackatonStorage
              return ContractHandler.SendRequestAsync(setIpfsHashFunction);
         }
 
-        public Task<TransactionReceipt> SetIpfsHashRequestAndWaitForReceiptAsync(BigInteger ipfsHash, CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> SetIpfsHashRequestAndWaitForReceiptAsync(string ipfsHash, CancellationTokenSource cancellationToken = null)
         {
             var setIpfsHashFunction = new SetIpfsHashFunction();
                 setIpfsHashFunction.IpfsHash = ipfsHash;
@@ -141,7 +180,7 @@ namespace Contracts.Contracts.HackatonStorage
              return ContractHandler.SendRequestAndWaitForReceiptAsync(setPriceFunction, cancellationToken);
         }
 
-        public Task<string> SetPriceRequestAsync(BigInteger ipfsHash, BigInteger price)
+        public Task<string> SetPriceRequestAsync(string ipfsHash, BigInteger price)
         {
             var setPriceFunction = new SetPriceFunction();
                 setPriceFunction.IpfsHash = ipfsHash;
@@ -150,7 +189,7 @@ namespace Contracts.Contracts.HackatonStorage
              return ContractHandler.SendRequestAsync(setPriceFunction);
         }
 
-        public Task<TransactionReceipt> SetPriceRequestAndWaitForReceiptAsync(BigInteger ipfsHash, BigInteger price, CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> SetPriceRequestAndWaitForReceiptAsync(string ipfsHash, BigInteger price, CancellationTokenSource cancellationToken = null)
         {
             var setPriceFunction = new SetPriceFunction();
                 setPriceFunction.IpfsHash = ipfsHash;
@@ -169,7 +208,7 @@ namespace Contracts.Contracts.HackatonStorage
              return ContractHandler.SendRequestAndWaitForReceiptAsync(setPubkeyFunction, cancellationToken);
         }
 
-        public Task<string> SetPubkeyRequestAsync(BigInteger pubKey)
+        public Task<string> SetPubkeyRequestAsync(string pubKey)
         {
             var setPubkeyFunction = new SetPubkeyFunction();
                 setPubkeyFunction.PubKey = pubKey;
@@ -177,7 +216,7 @@ namespace Contracts.Contracts.HackatonStorage
              return ContractHandler.SendRequestAsync(setPubkeyFunction);
         }
 
-        public Task<TransactionReceipt> SetPubkeyRequestAndWaitForReceiptAsync(BigInteger pubKey, CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> SetPubkeyRequestAndWaitForReceiptAsync(string pubKey, CancellationTokenSource cancellationToken = null)
         {
             var setPubkeyFunction = new SetPubkeyFunction();
                 setPubkeyFunction.PubKey = pubKey;

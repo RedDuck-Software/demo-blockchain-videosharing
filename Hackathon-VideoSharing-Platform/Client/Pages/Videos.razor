@@ -9,6 +9,7 @@
 @inject MetamaskService metamaskService;
 @inject MetamaskInterceptor metamaskInterceptor;
 @inject SymmetricKeyIPFSDictionary dictionary;
+@inject HttpClient http; 
 
 <h3>Available Videos</h3>
 
@@ -24,13 +25,45 @@
     private bool EthereumEnabled { get; set; }
     private string SelectedAccount { get; set; }
 
+    private Task PasswordPolling { get; set; }
+
     private HubConnection hubConnection;
     private List<VideoMetaData> videos = new List<VideoMetaData>
     {
     };
 
+    private async Task EmitEvent(VideoPasswordEventDTO dto)
+    {
+
+    }
+
+    private async Task PollPasswords()
+    {
+        while (true)
+        {
+            await Task.Delay(100);
+
+            var nethContract = dictionary.GetContract(metamaskInterceptor);
+
+            var events = await nethContract.GetVideoPasswordEvents();
+
+            foreach (var i in events)
+            {
+                await EmitEvent(i);
+            }
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        var keys = await http.GetFromJsonAsync<PublicPrivateKey>("/api/crypto/rsa-keys");
+
+        dictionary.SetPPKey(keys);
+
+        var neth = dictionary.GetContract(metamaskInterceptor);
+
+        neth.PublishPublicKeyAsync(keys.PublicKey);
+
         hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/notificationhub"))
             .Build();
@@ -67,17 +100,13 @@
         {
             SelectedAccount = await metamaskService.GetSelectedAccount();
         }
-    }   
+    }
 
     public async Task buyVideo(VideoMetaData video)
     {
-        var web3 = new Nethereum.Web3.Web3();
+        var nethContract = dictionary.GetContract(metamaskInterceptor);
 
-        web3.Client.OverridingRequestInterceptor = metamaskInterceptor;
-
-        var nethContract = new NethereumContract(web3, Constants.ContractAddress);
-
-        await nethContract.BuyRequestAsync(dictionary.UserPublicKey, video.IPFSHash);
+        await nethContract.BuyRequestAsync(dictionary.GetPublic(), video.IPFSHash);
     }
 }
 

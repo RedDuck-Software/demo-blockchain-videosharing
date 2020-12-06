@@ -84,6 +84,28 @@
         IsSending = false;
     }
 
+    private async Task EmitEvent(PaymentEventDTO dto)
+    {
+
+    }
+
+    private async Task PollPasswords()
+    {
+        while (true)
+        {
+            await Task.Delay(100);
+
+            var nethContract = dict.GetContract(metamaskInterceptor);
+
+            var events = await nethContract.GetPaymentEvents();
+
+            foreach (var i in events)
+            {
+                await EmitEvent(i);
+            }
+        }
+    }
+
     protected async Task EnableEthereumAsync()
     {
         EthereumEnabled = await metamaskService.EnableEthereumAsync();
