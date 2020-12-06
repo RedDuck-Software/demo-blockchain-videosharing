@@ -1,0 +1,26 @@
+﻿@page "/userVideos"
+@using Hackathon_VideoSharing_Platform.Shared
+@using Microsoft.AspNetCore.SignalR.Client
+
+
+<h3>User videos</h3>
+
+@code {
+    HubConnection hubConnection;
+    List<VideoMetaData> videos = new List<VideoMetaData>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+              .WithUrl("/notificationhub")
+              .Build();
+
+        hubConnection.On<VideoMetaData>("OnBroadcastNewVideoInfo", (video) =>
+        {
+            videos.Add(video);
+            this.StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+    }
+}

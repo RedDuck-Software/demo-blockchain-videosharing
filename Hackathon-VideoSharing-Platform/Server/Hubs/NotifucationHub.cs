@@ -1,6 +1,5 @@
 ﻿using Hackathon_VideoSharing_Platform.Shared;
 using Microsoft.AspNetCore.SignalR;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Hackathon_VideoSharing_Platform.Server.Hubs
@@ -10,7 +9,6 @@ namespace Hackathon_VideoSharing_Platform.Server.Hubs
         public async Task BroadcastNewVideoInfo(VideoMetaData videoMetaData)
         {
             await Clients.All.SendAsync("OnBroadcastNewVideoInfo", videoMetaData);
-            Debug.WriteLine("Send video");
         }
     }
 }

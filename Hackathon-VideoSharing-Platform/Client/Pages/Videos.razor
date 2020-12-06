@@ -30,7 +30,6 @@
 
         hubConnection.On<VideoMetaData>("OnBroadcastNewVideoInfo", (video) =>
         {
-            Console.WriteLine(video);
             videos.Add(video);
             this.StateHasChanged(); 
         });
